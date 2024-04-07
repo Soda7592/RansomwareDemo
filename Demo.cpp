@@ -4,6 +4,7 @@
 #include <strsafe.h>
 BOOL EncryptFile(LPTSTR, LPVOID);
 BOOL DecryptFile(LPTSTR, LPVOID);
+BOOL XORFile(LPTSTR, LPTSTR, LPVOID);
 DWORD ScanPath(LPTSTR);
 
 // LPTSTR -> Pointer (TCHAR) String
@@ -15,7 +16,9 @@ DWORD ScanPath(LPTSTR);
 
 int _tmain(int argc, _TCHAR* argv[]) {
     // DWORD attributes = GetFileAttributes(_T("C:\\Users\\Mata\\Desktop\\wget.txt"));
-    EncryptFile(_T("C:\\Users\\Mata\\Desktop\\wget.txt"), NULL);
+    // EncryptFile(_T("C:\\Users\\Mata\\Desktop\\wget.txt"), NULL);
+    // DWORD dwkey = 0x12345678;
+    // XORFile(_T("C:\\Users\\Mata\\Desktop\\test.txt"), _T("C:\\Users\\Mata\\Desktop\\wget.txt"), &dwkey);
     return 0;
 }
 
@@ -51,6 +54,45 @@ BOOL DecryptFile(LPTSTR lpFileName, LPVOID DecKey) {
         }
     }
     return FALSE;
+}
+
+BOOL XORFile(LPTSTR lpExistingFileName, LPTSTR lpNewFileName, LPVOID lpKey) {
+    BOOL bResult = FALSE;
+    if(!lpKey) {
+        return bResult;
+    }
+    HANDLE hSrc, hDst;
+    TCHAR mesg[MAX_PATH];
+    DWORD dwKey = *((DWORD *) lpKey);
+    // GENERIC_READ : Could read the file.
+    // FILE_SHARE_READ : Allow other programs open this file by GENERIC_READ mode.  
+    // OPEN_EXISTING : Open a existing file, if not return the ERROR_FILE_NOT_FOUND error message.
+    hSrc = CreateFile(lpExistingFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hSrc != INVALID_HANDLE_VALUE) {
+        hDst = CreateFile(lpNewFileName, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        if(hDst != INVALID_HANDLE_VALUE) {
+            bResult = TRUE;
+            BYTE Buffer[MAX_PATH];
+            DWORD ReadCount, WriteCount;
+            while(ReadFile(hSrc, Buffer, MAX_PATH, &ReadCount, NULL) && ReadCount > 0) {
+                for(int i=0;i<ReadCount;i++) {
+                    Buffer[i] = Buffer[i] ^ dwKey;
+                }
+                if(!WriteFile(hDst,Buffer,ReadCount, &WriteCount, NULL) || ReadCount != WriteCount) {
+                    bResult = FALSE;
+                    break;
+                }
+            }
+            CloseHandle(hDst);
+        }
+        else 
+            bResult = FALSE;
+        CloseHandle(hSrc);
+    }
+    else 
+        bResult = FALSE;
+    CloseHandle(hSrc);
+    return bResult;
 }
 
 DWORD ScanPath(LPTSTR lpPath) {
