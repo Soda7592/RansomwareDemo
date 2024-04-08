@@ -8,7 +8,7 @@ BOOL EncryptFile(LPTSTR, LPVOID);
 BOOL DecryptFile(LPTSTR, LPVOID);
 BOOL XORFile(LPTSTR, LPTSTR, LPVOID);
 BOOL TargetExt(LPTSTR);
-DWORD ScanPath(LPTSTR);
+DWORD ScanPath(LPTSTR, BOOL(*CallBack)(LPTSTR, LPVOID), LPVOID);
 
 // LPTSTR -> Pointer (TCHAR) String
 // LPVOID -> void*
@@ -17,18 +17,47 @@ DWORD ScanPath(LPTSTR);
 // T -> TCHAR
 // STR -> String
 
+typedef struct {
+    int i1;
+    int i2;
+    float retval;
+} MyParam;
+
 int _tmain(int argc, _TCHAR* argv[]) {
     // DWORD attributes = GetFileAttributes(_T("C:\\Users\\Mata\\Desktop\\wget.txt"));
     // EncryptFile(_T("C:\\Users\\Mata\\Desktop\\wget.txt"), NULL);
     // DWORD dwkey = 0x12345678;
     // XORFile(_T("C:\\Users\\Mata\\Desktop\\test.txt"), _T("C:\\Users\\Mata\\Desktop\\wget.txt"), &dwkey);
-    TargetExt(_T(".doc"));
+    // TargetExt(_T(".doc"));
+    DWORD dwCount = 0;
+    DWORD dwKey = 0;
+    BOOL (*CallBack)(LPTSTR, LPVOID) = NULL;
+    if(argc < 3) {
+        _tprintf(_T("Usage: %s e dirname\n"), argv[0]);
+        _tprintf(_T("Usage: %s d dirname\n"), argv[0]);
+        exit(1);
+    }
+
+    if(*argv[1] == 'e') 
+        CallBack = &EncryptFile;
+    else if(*argv[1] == 'd')
+        CallBack = &DecryptFile;
+    for(int i=2;i<argc;i++) {
+        _tprintf(_T("Scanning %s\n"), argv[i]);
+        dwCount += ScanPath(argv[i], CallBack, &dwKey);
+    }
+
+    _tprintf(_T("%s: %d FILE PROCESS\n"), argv[0], dwCount);
+    system("pause");
+
     return 0;
 }
 
 BOOL EncryptFile(LPTSTR lpFileName, LPVOID EncKey) {
     TCHAR szOutputFile[MAX_PATH]; // MAX_PATH was defined 260, (in minwindef.h)
     size_t length_of_arg;
+    if(!TargetExt(lpFileName)) 
+        return FALSE;
     StringCchPrintf(szOutputFile, MAX_PATH - 1, _T("%s.crypt"), lpFileName);
     StringCchLength(szOutputFile, MAX_PATH, &length_of_arg);
     if(length_of_arg <= (MAX_PATH - 3)) {
@@ -99,7 +128,7 @@ BOOL XORFile(LPTSTR lpExistingFileName, LPTSTR lpNewFileName, LPVOID lpKey) {
     return bResult;
 }
 
-DWORD ScanPath(LPTSTR lpPath) {
+DWORD ScanPath(LPTSTR lpPath, BOOL (*CallBack)(LPTSTR, LPVOID), LPVOID lpParam) {
     WIN32_FIND_DATA ffd;
     TCHAR szDir[MAX_PATH];
     size_t length_of_arg;
@@ -110,9 +139,8 @@ DWORD ScanPath(LPTSTR lpPath) {
 
     if(dwFileAttrib & FILE_ATTRIBUTE_DIRECTORY) {
         StringCchLength(lpPath, MAX_PATH, &length_of_arg);
-        if(length_of_arg > MAX_PATH-3) {
+        if(length_of_arg > MAX_PATH-3) 
             return 0;
-        }
         StringCchCopy(szDir, MAX_PATH, lpPath);
         StringCchCat(szDir, MAX_PATH, _T("\\*"));
         if((hFind = FindFirstFile(szDir, &ffd)) == INVALID_HANDLE_VALUE) {
@@ -128,19 +156,20 @@ DWORD ScanPath(LPTSTR lpPath) {
             TCHAR szFullPath[MAX_PATH];
             StringCchPrintf(szFullPath, MAX_PATH - 1, _T("%s\\%s"), lpPath, ffd.cFileName);
             StringCchLength(szFullPath, MAX_PATH, &length_of_arg);
-            if(length_of_arg <= MAX_PATH-3) {
-                dwCount += ScanPath(szFullPath);
-            }
-
+            if(length_of_arg <= MAX_PATH-3) 
+                dwCount += ScanPath(szFullPath, CallBack, lpParam);
         }while(FindNextFile(hFind, &ffd) != 0);
-        
         dwError = GetLastError();
         FindClose(hFind);
     }
     else {
         // Add encryption/decryption functions here.
-        _tprintf(_T("%s\n"), lpPath);
-        dwCount++;
+        _tprintf(_T("Find file %s\n"), lpPath);
+        /*if(CallBack) {
+            _tprintf(_T("CallBack %s\n"), lpPath);
+            if((*CallBack)(lpPath, lpParam))   
+                dwCount;
+        }*/
     }
     return dwCount;
 } 
