@@ -30,7 +30,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
     // XORFile(_T("C:\\Users\\Mata\\Desktop\\test.txt"), _T("C:\\Users\\Mata\\Desktop\\wget.txt"), &dwkey);
     // TargetExt(_T(".doc"));
     DWORD dwCount = 0;
-    DWORD dwKey = 0;
+    DWORD dwKey = 0x55;
     BOOL (*CallBack)(LPTSTR, LPVOID) = NULL;
     if(argc < 3) {
         _tprintf(_T("Usage: %s e dirname\n"), argv[0]);
